@@ -1,0 +1,8 @@
+{
+	"@metadata": {
+		"authors": [
+			"Robert Vogel <vogel@hallowelt.com>"
+		]
+	},
+	"ldapauthorization-desc": "Allows group based authorization against a LDAP resource"
+}

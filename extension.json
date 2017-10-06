@@ -1,0 +1,21 @@
+{
+	"name": "LDAPAuthorization",
+	"version": "1.0.0-alpha",
+	"author": [
+		"Cindy Cicalese",
+		"Mark A. Hershberger",
+		"Robert Vogel"
+	],
+	"url": "https://www.mediawiki.org/wiki/Extension:LDAPAuthorization",
+	"descriptionmsg": "ldapauthorization-desc",
+	"license-name": "GPL-2.0",
+	"type": "other",
+	"MessagesDirs": {
+		"LDAPAuthorization": [
+			"i18n"
+		]
+	},
+	"callback": "MediaWiki\\Extension\\LDAPAuthorization\\Setup::onRegistration",
+	"load_composer_autoloader" : true,
+	"manifest_version": 2
+}
