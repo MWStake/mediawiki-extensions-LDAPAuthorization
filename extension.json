@@ -16,6 +16,17 @@
 		]
 	},
 	"callback": "MediaWiki\\Extension\\LDAPAuthorization\\Setup::onRegistration",
+	"Hooks": {
+		"AuthRemoteuserFilterUserName": "MediaWiki\\Extension\\LDAPAuthorization\\Hook\\AuthRemoteuserFilterUserName::callback"
+	},
+	"AuthManagerAutoConfig": {
+		"secondaryauth": {
+			"LDAPAuthorizationSecondaryAuthenticationProvider": {
+				"class": "MediaWiki\\Extension\\LDAPAuthorization\\Auth\\SecondaryAuthenticationProvider",
+				"sort": 100
+			}
+		}
+	},
 	"load_composer_autoloader" : true,
 	"manifest_version": 2
 }
