@@ -16,6 +16,10 @@
 		]
 	},
 	"callback": "MediaWiki\\Extension\\LDAPAuthorization\\Setup::onRegistration",
+	"Hooks": {
+		"PluggableAuthUserAuthorization": "MediaWiki\\Extension\\LDAPAuthorization\\Hook\\PluggableAuthUserAuthorization::callback",
+		"AuthRemoteuserFilterUserName": "MediaWiki\\Extension\\LDAPAuthorization\\Hook\\AuthRemoteuserFilterUserName::callback"
+	},
 	"load_composer_autoloader" : true,
 	"manifest_version": 2
 }
