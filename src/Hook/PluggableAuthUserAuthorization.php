@@ -2,6 +2,10 @@
 
 namespace MediaWiki\Extension\LDAPAuthorization\Hook;
 
+use MediaWiki\Extension\LDAPProvider\UserDomainStore;
+use MediaWiki\Extension\LDAPProvider\ClientFactory;
+use MediaWiki\Extension\LDAPAuthorization\RulesFactory;
+
 class PluggableAuthUserAuthorization {
 
 	/**
@@ -24,14 +28,17 @@ class PluggableAuthUserAuthorization {
 
 	/**
 	 *
-	 * @param \MediaWiki\Extension\LDAPProvider\Client $ldapClient
 	 * @param \User $user
 	 * @param boolean $authorized
 	 */
-	public function __construct( $ldapClient, $user, &$authorized ) {
-		$this->ldapClient = $ldapClient;
+	public function __construct( $user, &$authorized ) {
 		$this->user = $user;
 		$this->authorized =& $authorized;
+
+		$userDomainStore = new UserDomainStore();
+		$domain = $userDomainStore->getDomainForUser( $user );
+
+		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
 	}
 
 	/**
@@ -40,13 +47,23 @@ class PluggableAuthUserAuthorization {
 	 * @param boolean $authorized
 	 */
 	public static function callback( $user, &$authorized ) {
-		$handler = new static( $username );
+		$handler = new static( $user, &$authorized );
 		return $handler->process();
 	}
 
+	/**
+	 *
+	 * @return boolean
+	 */
 	public function process() {
-		//TODO: Check if user fullfills "required groups" and "exclude groups"
-		//contraint and return false if not
+		$rulesFactory = new RulesFactory( $this->ldapClient );
+		$rules = $rulesFactory->makeRules();
+		foreach( $rules as $rule ) {
+			if( !$rule->applies( $this->user ) ) {
+				$this->authorized = false;
+			}
+		}
+
 		return $this->authorized;
 	}
 }
