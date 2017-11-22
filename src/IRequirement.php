@@ -2,12 +2,11 @@
 
 namespace MediaWiki\Extension\LDAPAuthorization;
 
-interface IRule {
+interface IRequirement {
 
 	/**
 	 *
-	 * @param \User $user
 	 * @return boolean
 	 */
-	public function applies( $user );
+	public function isSatisfied();
 }

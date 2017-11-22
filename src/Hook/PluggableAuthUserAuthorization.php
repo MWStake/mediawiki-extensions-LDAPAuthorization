@@ -4,7 +4,8 @@ namespace MediaWiki\Extension\LDAPAuthorization\Hook;
 
 use MediaWiki\Extension\LDAPProvider\UserDomainStore;
 use MediaWiki\Extension\LDAPProvider\ClientFactory;
-use MediaWiki\Extension\LDAPAuthorization\RulesFactory;
+use MediaWiki\Extension\LDAPAuthorization\RequirementsChecker;
+use MediaWiki\Extension\LDAPAuthorization\Config;
 
 class PluggableAuthUserAuthorization {
 
@@ -28,6 +29,12 @@ class PluggableAuthUserAuthorization {
 
 	/**
 	 *
+	 * @var \Config
+	 */
+	protected $config = null;
+
+	/**
+	 *
 	 * @param \User $user
 	 * @param boolean $authorized
 	 */
@@ -40,6 +47,10 @@ class PluggableAuthUserAuthorization {
 		);
 		$domain = $userDomainStore->getDomainForUser( $user );
 		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+
+		$this->config = DomainConfigFactory::getInstance()->factory(
+			$domain, Config::DOMAINCONFIG_SECTION
+		);
 	}
 
 	/**
@@ -57,13 +68,10 @@ class PluggableAuthUserAuthorization {
 	 * @return boolean
 	 */
 	public function process() {
-		$rulesFactory = new RulesFactory( $this->ldapClient );
-		$rules = $rulesFactory->makeRules();
-		foreach( $rules as $rule ) {
-			if( !$rule->applies( $this->user ) ) {
-				$this->authorized = false;
-				return false;
-			}
+		$requirementsChecker = new RequirementsChecker( $this->ldapClient, $this->config );
+		if( !$requirementsChecker->allSatisfiedBy( $user ) ) {
+			$this->authorized = false;
+			return false;
 		}
 
 		return true;

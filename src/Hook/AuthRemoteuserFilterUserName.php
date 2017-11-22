@@ -3,6 +3,9 @@ namespace MediaWiki\Extension\LDAPAuthorization\Hook;
 
 use MediaWiki\Extension\LDAPProvider\UserDomainStore;
 use MediaWiki\Extension\LDAPProvider\ClientFactory;
+use MediaWiki\Extension\LDAPProvider\DomainConfigFactory;
+use MediaWiki\Extension\LDAPAuthorization\RequirementsChecker;
+use MediaWiki\Extension\LDAPAuthorization\Config;
 
 /**
  * In conjunction with "Extension:Auth_remoteuser" we need to make sure that
@@ -29,6 +32,12 @@ class AuthRemoteuserFilterUserName {
 
 	/**
 	 *
+	 * @var \Config
+	 */
+	protected $config = null;
+
+	/**
+	 *
 	 * @param string $username
 	 */
 	public function __construct( &$username ) {
@@ -40,6 +49,10 @@ class AuthRemoteuserFilterUserName {
 		);
 		$domain = $userDomainStore->getDomainForUser( $this->user );
 		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+
+		$this->config = DomainConfigFactory::getInstance()->factory(
+			$domain, Config::DOMAINCONFIG_SECTION
+		);
 	}
 
 	/**
@@ -53,12 +66,9 @@ class AuthRemoteuserFilterUserName {
 	}
 
 	public function process() {
-		$rulesFactory = new RulesFactory( $this->ldapClient );
-		$rules = $rulesFactory->makeRules();
-		foreach( $rules as $rule ) {
-			if( !$rule->applies( $this->user ) ) {
-				return false;
-			}
+		$requirementsChecker = new RequirementsChecker( $this->ldapClient, $this->config );
+		if( !$requirementsChecker->allSatisfiedBy( $user ) ) {
+			return false;
 		}
 
 		return true;
