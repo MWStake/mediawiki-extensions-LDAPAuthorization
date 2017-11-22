@@ -23,12 +23,23 @@ class AuthRemoteuserFilterUserName {
 
 	/**
 	 *
-	 * @param \MediaWiki\Extension\LDAPProvider\Client $ldapClient
+	 * @var \User
+	 */
+	protected $user = null;
+
+	/**
+	 *
 	 * @param string $username
 	 */
-	public function __construct( $ldapClient, &$username ) {
-		$this->ldapClient = $ldapClient;
+	public function __construct( &$username ) {
 		$this->username &= $username;
+
+		$this->user = \User::newFromName( $username );
+		$userDomainStore = new UserDomainStore(
+			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
+		);
+		$domain = $userDomainStore->getDomainForUser( $this->user );
+		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
 	}
 
 	/**
@@ -37,20 +48,19 @@ class AuthRemoteuserFilterUserName {
 	 * @return boolean
 	 */
 	public static function callback( &$username ) {
-		$user = \User::newFromName( $username );
-		$userDomainStore = new UserDomainStore(
-			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
-		);
-		$domain = $userDomainStore->getDomainForUser( $user );
-		$ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
-
-		$handler = new static( $ldapClient, $username );
+		$handler = new static( $username );
 		return $handler->process();
 	}
 
 	public function process() {
-		//TODO: Check if user fullfills "required groups" and "exclude groups"
-		//contraint and return false if not
+		$rulesFactory = new RulesFactory( $this->ldapClient );
+		$rules = $rulesFactory->makeRules();
+		foreach( $rules as $rule ) {
+			if( !$rule->applies( $this->user ) ) {
+				return false;
+			}
+		}
+
 		return true;
 	}
 }

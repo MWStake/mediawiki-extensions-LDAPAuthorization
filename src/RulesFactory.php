@@ -18,6 +18,12 @@ class RulesFactory {
 
 	/**
 	 *
+	 * @var IRule[]
+	 */
+	protected $rules = [];
+
+	/**
+	 *
 	 * @param \MediaWiki\Extension\LDAPProvider\Client $ldapClient
 	 * @param \Config $config
 	 */
@@ -30,7 +36,39 @@ class RulesFactory {
 	 * @return IRule[]
 	 */
 	public function makeRules() {
-		
+		$this->makeGroupRules();
+		$this->makeAttributeMatchRules();
+
+		return $this->rules;
+	}
+
+	protected function makeGroupRules() {
+		if( !$this->config->has( Config::RULES_GROUPS ) ) {
+			return;
+		}
+
+		$groups = $this->config->get( Config::RULES_GROUPS );
+		if( isset( $groups[Config::RULES_GROUPS_REQUIRED ] ) ) {
+			$this->rules[] = new GroupsRequired(
+				$this->ldapClient,
+				$groups[Config::RULES_GROUPS_REQUIRED ]
+			);
+		}
+		if( isset( $groups[Config::RULES_GROUPS_EXCLUDED ] ) ) {
+			$this->rules[] = new GroupsExcluded(
+				$this->ldapClient,
+				$groups[Config::RULES_GROUPS_EXCLUDED ]
+			);
+		}
+	}
+
+	protected function makeAttributeMatchRules() {
+		if( !$this->config->has( Config::RULES_ATTRIBUTES ) ) {
+			return;
+		}
+		$attributes = $this->config->get( Config::RULES_ATTRIBUTES );
+
+		$this->rules[] = new AttributesMatch( $this->ldapClient, $attributes );
 	}
 
 }

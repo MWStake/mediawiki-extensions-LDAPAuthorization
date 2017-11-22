@@ -35,9 +35,10 @@ class PluggableAuthUserAuthorization {
 		$this->user = $user;
 		$this->authorized =& $authorized;
 
-		$userDomainStore = new UserDomainStore();
+		$userDomainStore = new UserDomainStore(
+			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
+		);
 		$domain = $userDomainStore->getDomainForUser( $user );
-
 		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
 	}
 
@@ -61,9 +62,10 @@ class PluggableAuthUserAuthorization {
 		foreach( $rules as $rule ) {
 			if( !$rule->applies( $this->user ) ) {
 				$this->authorized = false;
+				return false;
 			}
 		}
 
-		return $this->authorized;
+		return true;
 	}
 }
