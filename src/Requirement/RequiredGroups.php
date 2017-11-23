@@ -6,33 +6,41 @@ use MediaWiki\Extension\LDAPAuthorization\IRequirement;
 
 class RequiredGroups implements IRequirement {
 
+	/**
+	 *
+	 * @var array
+	 */
 	protected $requiredGroups = [];
 
-	protected $groups = [];
+	/**
+	 *
+	 * @var array
+	 */
+	protected $groupDNs = [];
 
 	/**
 	 *
 	 * @param array $requiredGroups
-	 * @param array $groups
+	 * @param array $groupDNs
 	 */
-	public function __construct( $requiredGroups, $groups ) {
-		$this->requiredGroups = $requiredGroups;
-		$this->groups = $groups;
+	public function __construct( $requiredGroups, $groupDNs ) {
+		$this->requiredGroups = array_map( 'strtolower', $requiredGroups );
+		$this->groupDNs = array_map( 'strtolower', $groupDNs );
 
 	}
 
+	/**
+	 *
+	 * @return boolean
+	 */
 	public function isSatisfied() {
-		//TODO: Group name normalization
-		$intersect = array_intersect(
-			$this->requiredGroups,
-			$this->groups
-		);
-
-		return empty(
-			array_intersect(
-				$this->requiredGroups,
-				$intersect
-			)
-		);
+		foreach( $this->requiredGroups as $requiredGroup ) {
+			//One matching group is sufficient! This is the same behavior as
+			//the old "Extension:LdapAuthentication" by Ryan Lane
+			if( in_array( $requiredGroup, $this->groupDNs ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

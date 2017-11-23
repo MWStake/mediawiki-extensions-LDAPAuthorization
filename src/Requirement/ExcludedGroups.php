@@ -6,23 +6,39 @@ use MediaWiki\Extension\LDAPAuthorization\IRequirement;
 
 class ExcludedGroups implements IRequirement {
 
+	/**
+	 *
+	 * @var array
+	 */
 	protected $excludedGroups = [];
 
-	protected $groups = [];
+	/**
+	 *
+	 * @var array
+	 */
+	protected $groupDNs = [];
 
-	public function __construct( $excludedGroups, $groups ) {
-		$this->excludedGroups = $excludedGroups;
-		$this->groups = $groups;
+	/**
+	 *
+	 * @param array $excludedGroups
+	 * @param array $groupDNs
+	 */
+	public function __construct( $excludedGroups, $groupDNs ) {
+		$this->excludedGroups = array_map( 'strtolower', $excludedGroups );
+		$this->groupDNs = array_map( 'strtolower', $groupDNs );
 
 	}
 
+	/**
+	 *
+	 * @return boolean
+	 */
 	public function isSatisfied() {
-		//TODO: Group name normalization
-		return empty(
-			array_intersect(
-				$this->excludedGroups,
-				$this->groups
-			)
-		);
+		foreach( $this->excludedGroups as $excludedGroup ) {
+			if( in_array( $excludedGroup, $this->groupDNs ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

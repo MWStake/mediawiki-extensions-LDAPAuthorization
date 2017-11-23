@@ -2,18 +2,19 @@
 
 namespace MediaWiki\Extension\LDAPAuthorization\Tests;
 
-use MediaWiki\Extension\LDAPAuthorization\Requirement\RequiredGroups;
+use MediaWiki\Extension\LDAPAuthorization\Requirement\ExcludedGroups;
 
-class RequiredGroupsTest extends \PHPUnit_Framework_TestCase {
+class ExcludedGroupsTest extends \PHPUnit_Framework_TestCase {
+
 	/**
 	 *
-	 * @param array $requiredGroups
+	 * @param array $excludedGroups
 	 * @param array $groups
 	 * @param boolean $expected
 	 * @dataProvider provideData
 	 */
-	public function testIsSatisfied( $requiredGroups, $groups, $expected ) {
-		$requirement = new RequiredGroups( $requiredGroups, $groups );
+	public function testIsSatisfied( $excludedGroups, $groups, $expected ) {
+		$requirement = new ExcludedGroups( $excludedGroups, $groups );
 		$result = $requirement->isSatisfied();
 
 		$this->assertEquals( $expected, $result );
@@ -22,13 +23,13 @@ class RequiredGroupsTest extends \PHPUnit_Framework_TestCase {
 	public function provideData() {
 		return [
 			'positive' => [
-				[ 'A', 'B' ],
-				[ 'A', 'B', 'C' ],
+				[ 'X', 'Y' ],
+				[ 'A', 'C', 'D' ],
 				true
 			],
 			'negative' => [
-				[ 'A', 'B' ],
-				[ 'A', 'C', 'D' ],
+				[ 'A', 'D' ],
+				[ 'A', 'B', 'C' ],
 				false
 			]
 		];

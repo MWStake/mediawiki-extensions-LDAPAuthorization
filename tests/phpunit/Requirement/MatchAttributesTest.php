@@ -5,6 +5,7 @@ namespace MediaWiki\Extension\LDAPAuthorization\Tests;
 use MediaWiki\Extension\LDAPAuthorization\Requirement\MatchAttributes;
 
 class MatchAttributesTest extends \PHPUnit_Framework_TestCase {
+
 	/**
 	 *
 	 * @param array $ruledefinition
