@@ -46,7 +46,9 @@ class PluggableAuthUserAuthorization {
 			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
 		);
 		$domain = $userDomainStore->getDomainForUser( $user );
-		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+		if( $domain !== null ) {
+			$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+		}
 
 		$this->config = DomainConfigFactory::getInstance()->factory(
 			$domain, Config::DOMAINCONFIG_SECTION
@@ -68,6 +70,9 @@ class PluggableAuthUserAuthorization {
 	 * @return boolean
 	 */
 	public function process() {
+		if( $this->isLocalUser() ) {
+			return true;
+		}
 		$requirementsChecker = new RequirementsChecker( $this->ldapClient, $this->config );
 		if( !$requirementsChecker->allSatisfiedBy( $user ) ) {
 			$this->authorized = false;
@@ -75,5 +80,14 @@ class PluggableAuthUserAuthorization {
 		}
 
 		return true;
+	}
+
+	/**
+	 * This hookhandler should not be invoked anyway if the user clicks on
+	 * "Login" instead of "Login with PluggableAuth"
+	 * @return boolean
+	 */
+	protected function isLocalUser() {
+		return $this->ldapClient === null;
 	}
 }

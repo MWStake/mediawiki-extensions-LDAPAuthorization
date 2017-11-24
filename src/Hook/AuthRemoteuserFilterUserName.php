@@ -48,7 +48,9 @@ class AuthRemoteuserFilterUserName {
 			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
 		);
 		$domain = $userDomainStore->getDomainForUser( $this->user );
-		$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+		if( $domain !== null ) {
+			$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+		}
 
 		$this->config = DomainConfigFactory::getInstance()->factory(
 			$domain, Config::DOMAINCONFIG_SECTION
@@ -65,12 +67,23 @@ class AuthRemoteuserFilterUserName {
 		return $handler->process();
 	}
 
+	/**
+	 *
+	 * @return boolean
+	 */
 	public function process() {
+		if( $this->isLocalUser() ) {
+			return true;
+		}
 		$requirementsChecker = new RequirementsChecker( $this->ldapClient, $this->config );
 		if( !$requirementsChecker->allSatisfiedBy( $user ) ) {
 			return false;
 		}
 
 		return true;
+	}
+
+	protected function isLocalUser() {
+		return $this->ldapClient === null;
 	}
 }
