@@ -63,19 +63,20 @@ class RequirementsChecker {
 			return;
 		}
 
-		$ldapGroups = $this->ldapClient->getUserGroups( $user );
+		$ldapUserGroups = $this->ldapClient->getUserGroups( $user );
+		$groupDNs = $ldapUserGroups->getFullDNs();
 
 		$groups = $this->config->get( Config::RULES_GROUPS );
 		if( isset( $groups[Config::RULES_GROUPS_REQUIRED ] ) ) {
 			$this->requirements[] = new RequiredGroups(
 				$groups[Config::RULES_GROUPS_REQUIRED ],
-				$ldapGroups
+				$groupDNs
 			);
 		}
 		if( isset( $groups[Config::RULES_GROUPS_EXCLUDED ] ) ) {
 			$this->requirements[] = new ExcludedGroups(
 				$groups[Config::RULES_GROUPS_EXCLUDED ],
-				$ldapGroups
+				$groupDNs
 			);
 		}
 	}
