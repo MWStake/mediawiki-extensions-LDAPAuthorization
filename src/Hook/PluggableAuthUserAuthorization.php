@@ -59,7 +59,7 @@ class PluggableAuthUserAuthorization {
 	 * @param boolean $authorized
 	 */
 	public static function callback( $user, &$authorized ) {
-		$handler = new static( $user, &$authorized );
+		$handler = new static( $user, $authorized );
 		return $handler->process();
 	}
 
