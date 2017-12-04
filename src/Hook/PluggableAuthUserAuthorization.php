@@ -7,6 +7,7 @@ use MediaWiki\Extension\LDAPProvider\ClientFactory;
 use MediaWiki\Extension\LDAPProvider\DomainConfigFactory;
 use MediaWiki\Extension\LDAPAuthorization\RequirementsChecker;
 use MediaWiki\Extension\LDAPAuthorization\Config;
+use MediaWiki\Auth\AuthManager;
 
 class PluggableAuthUserAuthorization {
 
@@ -34,6 +35,8 @@ class PluggableAuthUserAuthorization {
 	 */
 	protected $config = null;
 
+	protected $domain = '';
+
 	/**
 	 *
 	 * @param \User $user
@@ -43,16 +46,13 @@ class PluggableAuthUserAuthorization {
 		$this->user = $user;
 		$this->authorized =& $authorized;
 
-		$userDomainStore = new UserDomainStore(
-			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
-		);
-		$domain = $userDomainStore->getDomainForUser( $user );
-		if( $domain !== null ) {
-			$this->ldapClient = ClientFactory::getInstance()->getForDomain( $domain );
+		$this->initDomain();
+		if( $this->domain !== null ) {
+			$this->ldapClient = ClientFactory::getInstance()->getForDomain( $this->domain );
 		}
 
 		$this->config = DomainConfigFactory::getInstance()->factory(
-			$domain, Config::DOMAINCONFIG_SECTION
+			$this->domain, Config::DOMAINCONFIG_SECTION
 		);
 	}
 
@@ -90,5 +90,47 @@ class PluggableAuthUserAuthorization {
 	 */
 	protected function isLocalUser() {
 		return $this->ldapClient === null;
+	}
+
+	protected function initDomain() {
+		if( !$this->initDomainFromAuthenticationSessionData() ) {
+			if( !$this->initDomainFromUserDomainStore() ) {
+				$this->initDomainFromSettings();
+			}
+		}
+	}
+
+	protected function initDomainFromAuthenticationSessionData() {
+		if( !class_exists( '\MediaWiki\Extension\LDAPAuthentication\PluggableAuth' ) ) {
+			return false;
+		}
+		$domain = AuthManager::singleton()->getAuthenticationSessionData(
+			\MediaWiki\Extension\LDAPAuthentication\PluggableAuth::DOMAIN_SESSION_KEY
+		);
+		if( $domain === null ) {
+			return false;
+		}
+
+		$this->domain = $domain;
+		return true;
+	}
+
+	protected function initDomainFromUserDomainStore() {
+		$userDomainStore = new UserDomainStore(
+			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
+		);
+		$domain = $userDomainStore->getDomainForUser( $user );
+
+		if( $domain === null ) {
+			return false;
+		}
+
+		$this->domain = $domain;
+		return true;
+	}
+
+	protected function initDomainFromSettings() {
+		$configuredDomains = DomainConfigFactory::getInstance()->getConfiguredDomains();
+		$this->domain = $configuredDomains[0];
 	}
 }
