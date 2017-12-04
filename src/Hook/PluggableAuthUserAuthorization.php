@@ -4,6 +4,7 @@ namespace MediaWiki\Extension\LDAPAuthorization\Hook;
 
 use MediaWiki\Extension\LDAPProvider\UserDomainStore;
 use MediaWiki\Extension\LDAPProvider\ClientFactory;
+use MediaWiki\Extension\LDAPProvider\DomainConfigFactory;
 use MediaWiki\Extension\LDAPAuthorization\RequirementsChecker;
 use MediaWiki\Extension\LDAPAuthorization\Config;
 
