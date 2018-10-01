@@ -45,7 +45,7 @@ class AuthRemoteuserFilterUserName {
 
 		$this->user = \User::newFromName( $username );
 		$userDomainStore = new UserDomainStore(
-			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
+			wfGetLB()
 		);
 		$domain = $userDomainStore->getDomainForUser( $this->user );
 		if( $domain !== null ) {

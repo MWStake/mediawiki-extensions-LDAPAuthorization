@@ -117,7 +117,7 @@ class PluggableAuthUserAuthorization {
 
 	protected function initDomainFromUserDomainStore() {
 		$userDomainStore = new UserDomainStore(
-			\MediaWiki\MediaWikiServices::getInstance()->getDBLoadBalancer()
+			wfGetLB()
 		);
 		$domain = $userDomainStore->getDomainForUser( $user );
 
